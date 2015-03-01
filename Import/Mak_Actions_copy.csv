@@ -1,0 +1,10 @@
+Name;Path;Cmp;A/N;Description;MAK Status
+ARS115;mvx/app/pgm/customer;CBR;C001683CBR002T;multiple text on standard letter - migration from 14.1.2;exported
+ARS115;mvx/app/pgm/customer;CBR;C001573CBR003T;GAP103 Information Differenzschreiben zu Offene Posten;exported
+ARS117;mvx/app/pgm/customer;CBR;C001683CBR002T;multiple text on standard letter - migration from 14.1.2;exported
+ARS118;mvx/app/pgm/customer;CBR;C001716CBR002N;Migration - Ticket No. 44207 - Adressfelder aus OIS002.;exported
+ARS120;mvx/app/pgm/customer;CBR;C001573CBR003T;GAP103 Information Differenzschreiben zu Offene Posten;exported
+ARS121;mvx/app/pgm/customer;CBR;C001683CBR002T;multiple text on standard letter - migration from 14.1.2;exported
+ARS122;mvx/app/pgm/customer;CBR;C001716CBR002N;Migration - Ticket No. 44207 - Adressfelder aus OIS002.;exported
+ARS120;mvx/app/pgm/customer;CBR; C001683CBR002T;GAP103 Information Differenzschreiben zu Offene Posten;exported
+ARS121;mvx/app/pgm/customer;CBR;C001573CBR003T;GAP103 Information Differenzschreiben zu Offene Posten;exported

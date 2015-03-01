@@ -1,0 +1,235 @@
+package terna.dependency.ui.console;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.jgraph.JGraph;
+import org.jgraph.graph.AttributeMap;
+import org.jgraph.graph.CellView;
+import org.jgraph.graph.DefaultEdge;
+import org.jgraph.graph.DefaultGraphCell;
+import org.jgraph.graph.EdgeView;
+import org.jgraph.graph.GraphConstants;
+import org.jgraph.graph.GraphLayoutCache;
+import org.jgrapht.UndirectedGraph;
+import org.jgrapht.ext.JGraphModelAdapter;
+
+import terna.dependency.load.ILoader;
+import terna.dependency.load.InputObject;
+import terna.dependency.load.csv.CsvLoader;
+import terna.dependency.logic.ActionNumber;
+import terna.dependency.logic.DependencyGraphBuilder;
+import terna.dependency.logic.M3Object;
+
+import com.jgraph.layout.JGraphFacade;
+import com.jgraph.layout.tree.JGraphTreeLayout;
+
+public class Main {
+
+	static String query = "";
+	static List<InputObject> inputObjects;
+	static DependencyGraphBuilder dptBuilder;
+	
+	/**
+	 * @param args
+	 * @throws ParseException 
+	 */
+	public static void main(String[] args) throws ParseException {
+		Options options = new Options();
+		options.addOption("csvPath", true, "path to MAK exproted CSV file");
+		options.addOption("query", true, "Root M3 object name or A/N to query");
+		options.addOption("cmp", true, "Lowest component to include in the graphs");
+		
+		CommandLineParser parser = new GnuParser();
+		CommandLine cmd = parser.parse(options, args);
+		
+		String csvPath = cmd.getOptionValue("csvPath");
+		query = cmd.getOptionValue("query");
+		String cmp = cmd.getOptionValue("cmp");
+		
+		ILoader loader = new CsvLoader();
+		inputObjects = loader.load(csvPath);
+		dptBuilder = new DependencyGraphBuilder(inputObjects);
+		
+		JFrame frame = new JFrame("M3 Dependecy");
+	    
+		final JPanel pan = new JPanel();
+		pan.add(buildGraph());
+		pan.setBackground(Color.WHITE);
+		
+	    JPanel entryPanel = new JPanel();
+	    entryPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+	    entryPanel.add(new JLabel("Obj or A/N:"));
+	    final JTextField textField = new JTextField(query);
+	    Dimension d = new Dimension(200, 20);
+	    textField.setPreferredSize(d);
+	    entryPanel.add(textField);
+	    
+	    final JComboBox combo = new JComboBox(dptBuilder.listAll());
+	    entryPanel.add(combo);
+	    combo.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				query = combo.getSelectedItem().toString();
+				textField.setText(query);
+				pan.removeAll();
+				pan.add(buildGraph());
+				pan.validate();
+				pan.repaint();
+			}
+		});  
+	    
+	    JButton button = new JButton("Enter");
+	    button.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				query = textField.getText().trim();
+				combo.setSelectedItem(query);
+				pan.removeAll();
+				pan.add(buildGraph());
+				pan.validate();
+				pan.repaint();
+			}
+		});
+	    entryPanel.add(button);
+	    
+	    
+	    
+		JScrollPane scrollpane = new JScrollPane(pan);
+
+	    frame.getContentPane().add(entryPanel, BorderLayout.NORTH);
+	    frame.getContentPane().add(scrollpane, BorderLayout.CENTER);
+	    frame.setSize(800, 600);
+	    frame.setVisible(true); 
+	    
+	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	}
+	
+	static JGraph buildGraph() {
+	    //DirectedGraph<M3Object, ActionNumber> root = dptBuilder.getM3ObjectDependencies("ARS115");
+	    UndirectedGraph<Object, Object> root = dptBuilder.getAllDependencies(query);
+	    
+	    // create a visualization using JGraph, via the adapter
+	    //JGraph jgraph = new JGraph( new JGraphModelAdapter<M3Object, ActionNumber>( root ) );
+	    JGraph jgraph = new JGraph( new JGraphModelAdapterM3<Object, Object>( root ) );
+	    
+//	    final  JGraphHierarchicalLayout hir = new JGraphHierarchicalLayout();
+//	    final JGraphFacade graphFacade = new JGraphFacade(jgraph);      
+//	    hir.run(graphFacade);
+//	    final Map nestedMap = graphFacade.createNestedMap(true, true);
+//	    jgraph.getGraphLayoutCache().edit(nestedMap);
+	    
+//	    JGraphFacade facade = new JGraphFacade(jgraph); // Pass the facade the JGraph instance
+//	    JGraphLayout layout = new JGraphFastOrganicLayout(); // Create an instance of the appropriate layout
+//	    layout.run(facade); // Run the layout on the facade. Note that layouts do not implement the Runnable interface, to avoid confusion
+//
+//	     Map nested = facade.createNestedMap(true, true); // Obtain a mapof the resulting attribute changes from the facade
+//
+//	     jgraph.getGraphLayoutCache().edit(nested); 
+	    
+	    //Object roots = getRoots(); // replace getRoots with your own	    Object array of the cell tree roots. NOTE: these are the root cell(s) of the tree(s), not the roots of the graph model.
+
+	    
+	     JGraphFacade facade = new JGraphFacade(jgraph); // Pass thefacade the JGraph instance
+
+	     JGraphTreeLayout layout = new JGraphTreeLayout(); // Create aninstance of the appropriate layout
+//	     layout.setTreeDistance();
+//	     layout.setLevelDistance(100);
+//	     layout.setNodeDistance(150);
+	     
+	     removeEdgeLabels(jgraph);
+	     setColors(jgraph); 
+
+	     layout.run(facade); // Run the layout on the facade.
+
+	     Map nested = facade.createNestedMap(true, true); // Obtain a mapof the resulting attribute changes from the facade
+	     
+	     jgraph.getGraphLayoutCache().edit(nested); // Apply the results tothe actual graph
+	    
+	     ArrayList<M3Object> allM3Objects = new ArrayList<M3Object>();
+	     ArrayList<ActionNumber> allActionNumbers = new ArrayList<ActionNumber>();
+	     for(Object obj : root.vertexSet()) {
+	    	 if(obj instanceof M3Object) {
+	    		 allM3Objects.add((M3Object) obj);
+	    	 } else if(obj instanceof ActionNumber) {
+	    		 allActionNumbers.add((ActionNumber)obj);
+	    	 }
+	     }
+	    
+	     System.out.println(allM3Objects);
+	     System.out.println(allActionNumbers);
+	     
+	     return jgraph;
+	}
+	
+	public static void removeEdgeLabels(JGraph jgraph) {
+		GraphLayoutCache cache = jgraph.getGraphLayoutCache();
+		CellView[] cells = cache.getCellViews();
+		for (CellView cell : cells) {
+			if (cell instanceof EdgeView) {
+				EdgeView ev = (EdgeView) cell;
+				DefaultEdge eval = (DefaultEdge) ev.getCell();
+				eval.setUserObject("");
+			}
+		}
+		cache.reload();
+		jgraph.repaint();
+	}
+	
+	public static void setColors(JGraph jgraph) {
+		GraphLayoutCache cache = jgraph.getGraphLayoutCache();
+		for (Object item : jgraph.getRoots()) {
+			DefaultGraphCell cell = (DefaultGraphCell) item;
+			
+			CellView view1 = cache.getMapping(cell, true);
+			AttributeMap map1 = view1.getAttributes();
+			map1.applyValue(GraphConstants.AUTOSIZE, true);
+			map1.applyValue(GraphConstants.EDITABLE, false);
+			map1.applyValue(GraphConstants.VALUE, "ABC");
+			
+			if (cell.getUserObject() instanceof ActionNumber) {
+				CellView view = cache.getMapping(cell, true);
+				AttributeMap map = view.getAttributes();
+				if (((ActionNumber)cell.getUserObject()).getId().equals(query)) {
+					map.applyValue(GraphConstants.BACKGROUND, Color.RED);
+				} else {
+					map.applyValue(GraphConstants.BACKGROUND, Color.BLUE);
+				}
+			} else if (cell.getUserObject() instanceof M3Object) {
+				CellView view = cache.getMapping(cell, true);
+				AttributeMap map = view.getAttributes();
+				if (((M3Object)cell.getUserObject()).getName().equals(query)) {
+					map.applyValue(GraphConstants.BACKGROUND, Color.RED);
+				}
+			}
+			
+		}
+		cache.reload();
+		jgraph.repaint();
+	}
+	
+}

@@ -1,0 +1,128 @@
+package terna.dependency.logic;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+
+import org.jgrapht.UndirectedGraph;
+import org.jgrapht.graph.Pseudograph;
+
+import com.mxgraph.model.mxCell;
+import com.mxgraph.model.mxGraphModel;
+import com.mxgraph.view.mxGraph;
+
+import terna.dependency.load.InputObject;
+
+public class DependencyGraphBuilder {
+
+	private HashMap<String,M3Object> allM3Objects;
+	private HashMap<String,ActionNumber> allActionNumbers;
+	
+	private List<InputObject>  rawData;
+	
+	M3ObjectFactory objectFactory;
+	ActionNumberFactory anFactory;
+	
+	public DependencyGraphBuilder(List<InputObject> rawData) {
+		objectFactory = new M3ObjectFactory();
+		anFactory = new ActionNumberFactory();
+		allM3Objects = new HashMap<String,M3Object>();
+		allActionNumbers = new HashMap<String,ActionNumber>();
+		
+		this.rawData = rawData;
+		buildObjectsFromImput();
+	}
+	
+//	public DirectedGraph<M3Object, ActionNumber> getM3ObjectDependencies (String name) {
+//		DirectedGraph<M3Object, ActionNumber> hrefGraph = new DirectedPseudograph<M3Object, ActionNumber>(ActionNumber.class);
+//		M3Object firstObject = allM3Objects.get(name);
+//		traverseAction(firstObject, hrefGraph);
+//		return hrefGraph;
+//	}
+//
+//	private void traverseAction(M3Object parentNode, DirectedGraph<M3Object, ActionNumber> hrefGraph) {
+//		if(hrefGraph.containsVertex(parentNode))
+//			return;	
+//		
+//		hrefGraph.addVertex(parentNode);
+//		for (ActionNumber action : parentNode.getActionNumbers()) {
+//			for(M3Object object : action.getM3Objects()) {
+//				traverseAction(object, hrefGraph);
+//				if(!parentNode.equals(object)) {
+//					hrefGraph.addEdge(parentNode, object, ActionNumber.copy(action));
+//				}
+//			}
+//		}
+//	}
+	
+	public UndirectedGraph<Object, Object> getAllDependencies (String name) {
+		UndirectedGraph<Object, Object> hrefGraph = new Pseudograph<Object, Object>(Object.class);
+		Object firstObject = allM3Objects.get(name);
+		if(firstObject == null)
+			firstObject = allActionNumbers.get(name);
+		if(firstObject == null)
+//			throw ...
+			System.err.println("A/N or M3Objekt " + name + " nicht vorhanden");
+		if (firstObject != null)
+		 traverseAction(firstObject, hrefGraph);
+		
+		return hrefGraph;
+	}
+
+	private void traverseAction(Object parentNode, UndirectedGraph<Object, Object> hrefGraph) {
+		if(hrefGraph.containsVertex(parentNode))
+			return;	
+		
+		hrefGraph.addVertex(parentNode);
+		if(parentNode instanceof M3Object) {
+			for (ActionNumber action : ((M3Object) parentNode).getActionNumbers()) {
+				traverseAction(action, hrefGraph);
+				hrefGraph.addEdge(parentNode, action);
+			}
+		} else if (parentNode instanceof ActionNumber) {
+			for (M3Object object : ((ActionNumber) parentNode).getM3Objects()) {
+				traverseAction(object, hrefGraph);
+				hrefGraph.addEdge(parentNode, object);
+			}
+		} else {
+			System.err.println("Fehlerhafter Knoten " + parentNode);
+		}
+		
+	}
+	
+	private void buildObjectsFromImput() {
+		for (InputObject record : rawData) {
+			M3Object m3Object = objectFactory.generate(record);
+			ActionNumber actionNumber = anFactory.generate(record);
+			
+			if (m3Object.getType() == M3ObjectType.Language)
+				continue;
+			
+			if(!allM3Objects.containsKey(m3Object.getName())) {
+				allM3Objects.put(m3Object.getName(), m3Object);
+			} else {
+				m3Object = allM3Objects.get(m3Object.getName());
+			}
+			
+			if(!allActionNumbers.containsKey(actionNumber.getId())) {
+				allActionNumbers.put(actionNumber.getId(), actionNumber);
+			} else {
+				actionNumber = allActionNumbers.get(actionNumber.getId());
+			}
+			
+			m3Object.getActionNumbers().add(actionNumber);
+			actionNumber.getM3Objects().add(m3Object);
+			
+		}
+	}
+	
+	public String[] listAll() {
+		ArrayList<String> all = new ArrayList<String>();
+		all.addAll(allM3Objects.keySet());
+		all.addAll(allActionNumbers.keySet());
+		Collections.sort(all);
+		return all.toArray(new String[all.size()]);
+	}
+}
