@@ -2,15 +2,13 @@ package terna.dependency.ui.application;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.ComponentOrientation;
 import java.awt.Dimension;
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -28,6 +26,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jgraph.JGraph;
 
 import terna.dependency.logic.ActionNumber;
@@ -46,6 +45,7 @@ public class MainView {
 	private JFrame frame;
 	final JPanel pan;
 	private ListOutput listOutput;
+	private TableView tableView;
 	
 	public MainView(GraphVisualizer gVisualizer, String cmp, String query) {
 		this.gVisualizer = gVisualizer;
@@ -55,6 +55,7 @@ public class MainView {
 		this.frame = new JFrame("M3 Dependecy");
 		this.pan = new JPanel(new BorderLayout());
 		this.listOutput = new ListOutput();
+		this.tableView = new TableView();
 	}
 	
 	public MainView(GraphVisualizer gVisualizer) {
@@ -67,6 +68,8 @@ public class MainView {
 	
 	public void drawFrame() throws Exception {
 		buildGraph(query, cmp);
+		loadAllActionNumberDependencies();
+		
 		pan.setBackground(Color.WHITE);
 		JPanel topPanel = new JPanel();
 		topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
@@ -192,8 +195,8 @@ public class MainView {
 		
 		JTabbedPane tabPane = new JTabbedPane();
 		tabPane.add("Graph", scrollpane);
-		
-		tabPane.addTab("List", this.listOutput);
+		tabPane.addTab("All Objects/ANs", this.listOutput);
+		tabPane.addTab("Action Numbers", this.tableView);
 		
 	    frame.getContentPane().add(topPanel, BorderLayout.NORTH);
 	    frame.getContentPane().add(tabPane, BorderLayout.CENTER);
@@ -202,7 +205,7 @@ public class MainView {
 	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 	}
-	
+
 	private JPanel drawColorRectangle(String color) {
 		Color c = Color.decode(color);
 		JPanel colorPane = new JPanel();
@@ -235,6 +238,8 @@ public class MainView {
 			JOptionPane.showMessageDialog(null, e.getMessage());
 			e.printStackTrace();
 		}
+		
+		// List output
 		ListOutput.getActionsModel().clear();
 		for (ActionNumber a : gVisualizer.getDrawnActionNumers()) {
 			String output = String.format("%s, %s, %s", a.getName(), a.getComponent(), a.getMakStatus());
@@ -249,5 +254,30 @@ public class MainView {
 		pan.add(g);
 		pan.validate();
 		pan.repaint();
+	}
+	
+	private void loadAllActionNumberDependencies() {
+		tableView.clear();
+
+		try {
+			Map<ActionNumber, List<ActionNumber>> actionNumberDependencyMap= gVisualizer.getActionNumberDependencyGraphs();
+			for (Map.Entry<ActionNumber, List<ActionNumber>> a : actionNumberDependencyMap.entrySet()) {
+				ActionNumber baseAction = a.getKey();
+				List<String> dependentActionsList = new ArrayList<String>();
+				for (ActionNumber depAction : a.getValue()) {
+					dependentActionsList.add(String.format("%s (%s)", depAction.getName(), depAction.getMakStatus()));
+				}
+				String dependencies = StringUtils.join(dependentActionsList, ", ");
+
+				String baseActionName = baseAction.getName();
+				String cmp = baseAction.getComponent();
+				String status = baseAction.getMakStatus();
+
+				tableView.addRow(baseActionName, status, cmp, dependencies);
+			}
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, e.getMessage());
+			e.printStackTrace();
+		}
 	}
 }

@@ -2,6 +2,7 @@ package terna.dependency.logic;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -153,6 +154,22 @@ public class GraphVisualizer {
 		}
 		cache.reload();
 		jgraph.repaint();
+	}
+	
+	public Map<ActionNumber, List<ActionNumber>> getActionNumberDependencyGraphs() throws Exception {
+		Map<ActionNumber, List<ActionNumber>> actionNumberGraphs = new HashMap<ActionNumber, List<ActionNumber>>();
+		for (String action : rawData.getAllActionNumbers().keySet()) {
+			ActionNumber baseAction = rawData.getAllActionNumbers().get(action);
+			UndirectedGraph<Object, Object> root = dptBuilder.getAllDependencies(action);
+			List<ActionNumber> dependentActions = new ArrayList<ActionNumber>();
+			for(Object obj : root.vertexSet()) {
+				if(obj instanceof ActionNumber) {
+					dependentActions.add((ActionNumber)obj);
+				}
+			}
+			actionNumberGraphs.put(baseAction, dependentActions);
+		}
+		return actionNumberGraphs;
 	}
 	
 	public RawData getRawData() {
