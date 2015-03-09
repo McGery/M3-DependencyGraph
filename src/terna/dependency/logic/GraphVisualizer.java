@@ -164,6 +164,9 @@ public class GraphVisualizer {
 			List<ActionNumber> dependentActions = new ArrayList<ActionNumber>();
 			for(Object obj : root.vertexSet()) {
 				if(obj instanceof ActionNumber) {
+					ActionNumber subNumber = (ActionNumber)obj;
+					if (subNumber.equals(baseAction))
+						continue;
 					dependentActions.add((ActionNumber)obj);
 				}
 			}
