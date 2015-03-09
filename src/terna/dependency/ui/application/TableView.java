@@ -1,10 +1,14 @@
 package terna.dependency.ui.application;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.GridLayout;
+import java.awt.event.ActionListener;
 
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -20,9 +24,16 @@ public class TableView extends JPanel {
 
 	private static final long serialVersionUID = 4604498861618486903L;
 	private JTable table;
+	private JCheckBox cbDev;
+	private JCheckBox cbTest;
+	private JCheckBox cbAppr;
+	private JCheckBox cbExp;
+	private MainView controller;
 	
-	public TableView() {
-		super(new GridLayout(1,0));
+	public TableView(MainView controller) {
+		super(new BorderLayout());
+		setTableViewController(controller);
+		initTopArea();
 		
 		DefaultTableModel m = new DefaultTableModel(new Object[]{"Action Number", "Status", "Component", "Dependencies"}, 0);
 		table = new JTable(m);
@@ -41,7 +52,68 @@ public class TableView extends JPanel {
         JScrollPane scrollPane = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
         //Add the scroll pane to this panel.
-        add(scrollPane);
+        add(scrollPane, BorderLayout.CENTER);
+	}
+	
+	private void initTopArea() {
+		JPanel topPane = new JPanel();
+		topPane.setLayout(new BoxLayout(topPane, BoxLayout.X_AXIS));
+
+		// Development box
+		cbDev = new JCheckBox("development");
+		cbDev.addActionListener(new ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent e) {
+                
+            }
+		});
+		cbDev.setSelected(true);
+		topPane.add(cbDev);
+		
+		// Test box
+		cbTest = new JCheckBox("test");
+		cbTest.addActionListener(new ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent e) {
+                
+            }
+		});
+		cbTest.setSelected(true);
+		topPane.add(cbTest);
+		
+		// Approved box
+		cbAppr = new JCheckBox("approved");
+		cbAppr.addActionListener(new ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent e) {
+                
+            }
+		});
+		topPane.add(cbAppr);
+		
+		// Exported box
+		cbExp = new JCheckBox("exported");
+		cbExp.addActionListener(new ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent e) {
+                
+            }
+		});
+		topPane.add(cbExp);
+		
+		// Refresh button
+		JButton button = new JButton("Refresh");
+		button.addActionListener(new ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent e) {
+                getTableViewController().refreshTableView();
+            }
+		});
+		topPane.add(button);
+		this.add(topPane, BorderLayout.PAGE_START);
+	}
+
+	public void setTableViewController(MainView controller) {
+		this.controller = controller;
+	}
+	
+	public MainView getTableViewController() {
+		return this.controller;
 	}
 	
 	private void setJTableColumnsWidth(JTable table, int tablePreferredWidth, double... percentages) {
@@ -94,5 +166,21 @@ public class TableView extends JPanel {
 
 		       return this;
 		   }
+	}
+	
+	public Boolean getDevelopmentSelected() {
+		return cbDev.isSelected();
+	}
+
+	public Boolean getTestSelected() {
+		return cbTest.isSelected();
+	}
+
+	public Boolean getApprovedSelected() {
+		return cbAppr.isSelected();
+	}
+
+	public Boolean getExportedSelected() {
+		return cbExp.isSelected();
 	}
 }

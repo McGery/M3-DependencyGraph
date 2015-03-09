@@ -55,7 +55,8 @@ public class MainView {
 		this.frame = new JFrame("M3 Dependecy");
 		this.pan = new JPanel(new BorderLayout());
 		this.listOutput = new ListOutput();
-		this.tableView = new TableView();
+		this.tableView = new TableView(this);
+
 	}
 	
 	public MainView(GraphVisualizer gVisualizer) {
@@ -263,6 +264,11 @@ public class MainView {
 			Map<ActionNumber, List<ActionNumber>> actionNumberDependencyMap= gVisualizer.getActionNumberDependencyGraphs();
 			for (Map.Entry<ActionNumber, List<ActionNumber>> a : actionNumberDependencyMap.entrySet()) {
 				ActionNumber baseAction = a.getKey();
+				
+				if (!showOnView(baseAction)) {
+					continue;
+				}
+					
 				List<String> dependentActionsList = new ArrayList<String>();
 				for (ActionNumber depAction : a.getValue()) {
 					dependentActionsList.add(String.format("%s (%s)", depAction.getName(), depAction.getMakStatus()));
@@ -279,5 +285,26 @@ public class MainView {
 			JOptionPane.showMessageDialog(null, e.getMessage());
 			e.printStackTrace();
 		}
+	}
+	
+	private boolean showOnView(ActionNumber baseAction) {
+		boolean valid = false;
+		if (tableView.getDevelopmentSelected()) {
+			valid |= baseAction.getMakStatus().equals("development");
+		}
+		if (tableView.getTestSelected()) {
+			valid |= baseAction.getMakStatus().equals("test");
+		}
+		if (tableView.getApprovedSelected()) {
+			valid |= baseAction.getMakStatus().equals("approved");
+		}
+		if (tableView.getExportedSelected()) {
+			valid |= baseAction.getMakStatus().equals("exported");
+		}
+		return valid;
+	}
+
+	public void refreshTableView() {
+		loadAllActionNumberDependencies();
 	}
 }
