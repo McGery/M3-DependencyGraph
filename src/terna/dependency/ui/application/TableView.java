@@ -29,11 +29,13 @@ public class TableView extends JPanel {
 	private JCheckBox cbAppr;
 	private JCheckBox cbExp;
 	private MainView controller;
+	private MakStatusFilter makStatusFilter;
 	
 	public TableView(MainView controller) {
 		super(new BorderLayout());
 		setTableViewController(controller);
 		initTopArea();
+        this.makStatusFilter = new MakStatusFilter(); 
 		
 		DefaultTableModel m = new DefaultTableModel(new Object[]{"Action Number", "Status", "Component", "Dependencies"}, 0);
 		table = new JTable(m);
@@ -61,47 +63,30 @@ public class TableView extends JPanel {
 
 		// Development box
 		cbDev = new JCheckBox("development");
-		cbDev.addActionListener(new ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent e) {
-                
-            }
-		});
-		cbDev.setSelected(true);
 		topPane.add(cbDev);
 		
 		// Test box
 		cbTest = new JCheckBox("test");
-		cbTest.addActionListener(new ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent e) {
-                
-            }
-		});
-		cbTest.setSelected(true);
 		topPane.add(cbTest);
 		
 		// Approved box
 		cbAppr = new JCheckBox("approved");
-		cbAppr.addActionListener(new ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent e) {
-                
-            }
-		});
 		topPane.add(cbAppr);
 		
 		// Exported box
 		cbExp = new JCheckBox("exported");
-		cbExp.addActionListener(new ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent e) {
-                
-            }
-		});
 		topPane.add(cbExp);
 		
 		// Refresh button
 		JButton button = new JButton("Refresh");
 		button.addActionListener(new ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent e) {
-                getTableViewController().refreshTableView();
+				MakStatusFilter filter = new MakStatusFilter();
+				filter.setShowDevelopmentNumbers(getDevelopmentSelected());
+				filter.setShowTestNumbers(getTestSelected());
+				filter.setShowApprovedNumbers(getApprovedSelected());
+				filter.setShowExportedNumbers(getExportedSelected());
+                getTableViewController().refreshTableView(filter);
             }
 		});
 		topPane.add(button);
@@ -115,6 +100,56 @@ public class TableView extends JPanel {
 	public MainView getTableViewController() {
 		return this.controller;
 	}
+
+	public void addRow (String actionNumber, String status, String component, String dependencies) {
+		DefaultTableModel model = (DefaultTableModel) table.getModel();
+		model.addRow(new Object[]{actionNumber, status, component, dependencies});
+	}
+	
+	public void clear() {
+		DefaultTableModel model = (DefaultTableModel) table.getModel();
+		model.setRowCount(0);
+	}
+	
+	public Boolean getDevelopmentSelected() {
+		return cbDev.isSelected();
+	}
+
+	public Boolean getTestSelected() {
+		return cbTest.isSelected();
+	}
+
+	public Boolean getApprovedSelected() {
+		return cbAppr.isSelected();
+	}
+
+	public Boolean getExportedSelected() {
+		return cbExp.isSelected();
+	}
+	
+	public void setDevelopmentSelected(boolean value) {
+		cbDev.setSelected(value);
+	}
+	
+	public void setTestSelected(boolean value) {
+		cbTest.setSelected(value);
+	}
+	
+	public void setApprovedSelected(boolean value) {
+		cbAppr.setSelected(value);
+	}
+	
+	public void setExportedSelected(boolean value) {
+		cbExp.setSelected(value);
+	}
+	
+	void applyMakStatusFilter(MakStatusFilter filter) {
+		this.makStatusFilter.setValues(filter);
+		this.setDevelopmentSelected(makStatusFilter.isShowDevelopmentNumbers());
+		this.setTestSelected(makStatusFilter.isShowTestNumbers());
+		this.setApprovedSelected(makStatusFilter.isShowApprovedNumbers());
+		this.setExportedSelected(makStatusFilter.isShowExportedNumbers());
+	}
 	
 	private void setJTableColumnsWidth(JTable table, int tablePreferredWidth, double... percentages) {
 	    double total = 0;
@@ -127,16 +162,6 @@ public class TableView extends JPanel {
 	        column.setPreferredWidth((int)
 	                (tablePreferredWidth * (percentages[i] / total)));
 	    }
-	}
-
-	public void addRow (String actionNumber, String status, String component, String dependencies) {
-		DefaultTableModel model = (DefaultTableModel) table.getModel();
-		model.addRow(new Object[]{actionNumber, status, component, dependencies});
-	}
-	
-	public void clear() {
-		DefaultTableModel model = (DefaultTableModel) table.getModel();
-		model.setRowCount(0);
 	}
 	
 	private class TextAreaRenderer extends JTextArea implements TableCellRenderer {
@@ -166,21 +191,5 @@ public class TableView extends JPanel {
 
 		       return this;
 		   }
-	}
-	
-	public Boolean getDevelopmentSelected() {
-		return cbDev.isSelected();
-	}
-
-	public Boolean getTestSelected() {
-		return cbTest.isSelected();
-	}
-
-	public Boolean getApprovedSelected() {
-		return cbAppr.isSelected();
-	}
-
-	public Boolean getExportedSelected() {
-		return cbExp.isSelected();
 	}
 }

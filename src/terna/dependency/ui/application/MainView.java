@@ -69,7 +69,7 @@ public class MainView {
 	
 	public void drawFrame() throws Exception {
 		buildGraph(query, cmp);
-		loadAllActionNumberDependencies();
+		initTableView();
 		
 		pan.setBackground(Color.WHITE);
 		JPanel topPanel = new JPanel();
@@ -257,18 +257,13 @@ public class MainView {
 		pan.repaint();
 	}
 	
-	private void loadAllActionNumberDependencies() {
+	public void refreshTableView(MakStatusFilter filter) {
 		tableView.clear();
 
 		try {
-			Map<ActionNumber, List<ActionNumber>> actionNumberDependencyMap= gVisualizer.getActionNumberDependencyGraphs();
+			Map<ActionNumber, List<ActionNumber>> actionNumberDependencyMap = gVisualizer.getActionNumberDependencyGraphs(filter);
 			for (Map.Entry<ActionNumber, List<ActionNumber>> a : actionNumberDependencyMap.entrySet()) {
 				ActionNumber baseAction = a.getKey();
-				
-				if (!showOnView(baseAction)) {
-					continue;
-				}
-					
 				List<String> dependentActionsList = new ArrayList<String>();
 				for (ActionNumber depAction : a.getValue()) {
 					dependentActionsList.add(String.format("%s (%s)", depAction.getName(), depAction.getMakStatus()));
@@ -287,24 +282,13 @@ public class MainView {
 		}
 	}
 	
-	private boolean showOnView(ActionNumber baseAction) {
-		boolean valid = false;
-		if (tableView.getDevelopmentSelected()) {
-			valid |= baseAction.getMakStatus().equals("development");
-		}
-		if (tableView.getTestSelected()) {
-			valid |= baseAction.getMakStatus().equals("test");
-		}
-		if (tableView.getApprovedSelected()) {
-			valid |= baseAction.getMakStatus().equals("approved");
-		}
-		if (tableView.getExportedSelected()) {
-			valid |= baseAction.getMakStatus().equals("exported");
-		}
-		return valid;
-	}
-
-	public void refreshTableView() {
-		loadAllActionNumberDependencies();
+	private void initTableView() {
+		MakStatusFilter filter = new MakStatusFilter();
+		filter.setShowDevelopmentNumbers(true);
+		filter.setShowTestNumbers(true);
+		filter.setShowApprovedNumbers(false);
+		filter.setShowExportedNumbers(false);
+		tableView.applyMakStatusFilter(filter);
+		refreshTableView(filter);
 	}
 }

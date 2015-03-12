@@ -17,6 +17,8 @@ import org.jgraph.graph.GraphLayoutCache;
 import org.jgrapht.UndirectedGraph;
 import org.jgrapht.ext.JGraphModelAdapter;
 
+import terna.dependency.ui.application.MakStatusFilter;
+
 import com.jgraph.layout.JGraphFacade;
 import com.jgraph.layout.tree.JGraphTreeLayout;
 
@@ -156,16 +158,20 @@ public class GraphVisualizer {
 		jgraph.repaint();
 	}
 	
-	public Map<ActionNumber, List<ActionNumber>> getActionNumberDependencyGraphs() throws Exception {
+	public Map<ActionNumber, List<ActionNumber>> getActionNumberDependencyGraphs(MakStatusFilter filter) throws Exception {
 		Map<ActionNumber, List<ActionNumber>> actionNumberGraphs = new HashMap<ActionNumber, List<ActionNumber>>();
 		for (String action : rawData.getAllActionNumbers().keySet()) {
 			ActionNumber baseAction = rawData.getAllActionNumbers().get(action);
+			if (!isValid(baseAction, filter)) {
+				continue;
+			}
+			
 			UndirectedGraph<Object, Object> root = dptBuilder.getAllDependencies(action);
 			List<ActionNumber> dependentActions = new ArrayList<ActionNumber>();
 			for(Object obj : root.vertexSet()) {
 				if(obj instanceof ActionNumber) {
 					ActionNumber subNumber = (ActionNumber)obj;
-					if (subNumber.equals(baseAction))
+					if (!isValid(subNumber, filter) || subNumber.equals(baseAction))
 						continue;
 					dependentActions.add((ActionNumber)obj);
 				}
@@ -185,5 +191,22 @@ public class GraphVisualizer {
 
 	public List<ActionNumber> getDrawnActionNumers() {
 		return drawnActionNumers;
+	}
+	
+	private boolean isValid(ActionNumber action, MakStatusFilter filter) {
+		boolean valid = false;
+		if (filter.isShowDevelopmentNumbers()) {
+			valid |= action.getMakStatus().equals("development");
+		}
+		if (filter.isShowTestNumbers()) {
+			valid |= action.getMakStatus().equals("test");
+		}
+		if (filter.isShowApprovedNumbers()) {
+			valid |= action.getMakStatus().equals("approved");
+		}
+		if (filter.isShowExportedNumbers()) {
+			valid |= action.getMakStatus().equals("exported");
+		}
+		return valid;
 	}
 }
