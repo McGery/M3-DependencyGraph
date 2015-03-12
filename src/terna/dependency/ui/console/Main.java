@@ -31,6 +31,7 @@ public class Main {
 			}
 		} catch (Exception ex) {
 			JOptionPane.showMessageDialog(null, ex.getMessage());
+			System.out.println(ex.getStackTrace());
 		}
 	}
 }
