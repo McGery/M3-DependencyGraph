@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.List;
 
 import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import terna.dependency.load.ILoader;
 import terna.dependency.load.InputObject;
@@ -23,7 +25,9 @@ public class UiStarter {
 	public List<InputObject> loadInputObjects() {
 		String userDirLocation = System.getProperty("user.dir");
         File userDir = new File(userDirLocation);
+        FileFilter filter = new FileNameExtensionFilter("CSV","csv");         
 		JFileChooser fileChooser = new JFileChooser(userDir);
+        fileChooser.addChoosableFileFilter(filter);
 		fileChooser.showOpenDialog(null);
 		if (fileChooser.getSelectedFile() != null) {
 			String csvPath = fileChooser.getSelectedFile().getPath();
