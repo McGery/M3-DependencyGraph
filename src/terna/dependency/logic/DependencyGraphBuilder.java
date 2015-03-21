@@ -3,6 +3,8 @@ package terna.dependency.logic;
 import org.jgrapht.UndirectedGraph;
 import org.jgrapht.graph.Pseudograph;
 
+import terna.dependency.ui.application.MakStatusFilter;
+
 public class DependencyGraphBuilder {
 	
 	private RawData rawData;
@@ -34,6 +36,10 @@ public class DependencyGraphBuilder {
 //	}
 	
 	public UndirectedGraph<Object, Object> getAllDependencies (String name) throws Exception {
+		return getAllDependencies(name, MakStatusFilter.SHOW_ALL);
+	}
+	
+	public UndirectedGraph<Object, Object> getAllDependencies (String name, MakStatusFilter filter) throws Exception {
 		UndirectedGraph<Object, Object> hrefGraph = new Pseudograph<Object, Object>(Object.class);
 		Object firstObject = rawData.getAllM3Objects().get(name);
 		if (firstObject == null)
@@ -42,30 +48,33 @@ public class DependencyGraphBuilder {
 			System.err.println("A/N or M3Objekt " + name + " nicht vorhanden");
 			throw new Exception("A/N or M3Objekt " + name + " nicht vorhanden");
 		}
-		if (firstObject != null)
-		 traverseAction(firstObject, hrefGraph);
+		if (firstObject != null && filter.isValid((GraphNode)firstObject))
+			traverseAction(firstObject, hrefGraph, filter);
 		
 		return hrefGraph;
 	}
 
-	private void traverseAction(Object parentNode, UndirectedGraph<Object, Object> hrefGraph) {
+	private void traverseAction(Object parentNode, UndirectedGraph<Object, Object> hrefGraph, MakStatusFilter filter) {
 		if(hrefGraph.containsVertex(parentNode))
 			return;	
 		
 		hrefGraph.addVertex(parentNode);
-		if(parentNode instanceof M3Object) {
+		if(parentNode instanceof M3Object && filter.isValid((M3Object) parentNode)) {
 			for (ActionNumber action : ((M3Object) parentNode).getActionNumbers()) {
-				traverseAction(action, hrefGraph);
-				hrefGraph.addEdge(parentNode, action);
+				if (filter.isValid(action)) {
+					traverseAction(action, hrefGraph, filter);
+					hrefGraph.addEdge(parentNode, action);
+				}
 			}
-		} else if (parentNode instanceof ActionNumber) {
+		} else if (parentNode instanceof ActionNumber && filter.isValid((ActionNumber) parentNode)) {
 			for (M3Object object : ((ActionNumber) parentNode).getM3Objects()) {
-				traverseAction(object, hrefGraph);
-				hrefGraph.addEdge(parentNode, object);
+				if (filter.isValid(object)) {
+					traverseAction(object, hrefGraph, filter);
+					hrefGraph.addEdge(parentNode, object);
+				}
 			}
 		} else {
 			System.err.println("Fehlerhafter Knoten " + parentNode);
 		}
-		
 	}
 }

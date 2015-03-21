@@ -1,7 +1,11 @@
 package terna.dependency.ui.application;
 
+import terna.dependency.logic.GraphNode;
+
 public class MakStatusFilter {
 
+	public static final MakStatusFilter SHOW_ALL = new MakStatusFilter();
+	
 	private boolean showDevelopmentNumbers;
 	private boolean showTestNumbers;
 	private boolean showApprovedNumbers;
@@ -46,4 +50,20 @@ public class MakStatusFilter {
 		setShowExportedNumbers(filter.isShowExportedNumbers());
 	}
 	
+	public boolean isValid(GraphNode node) {
+		boolean valid = false;
+		if (isShowDevelopmentNumbers()) {
+			valid |= node.getMakStatus().equals("development");
+		}
+		if (isShowTestNumbers()) {
+			valid |= node.getMakStatus().equals("test");
+		}
+		if (isShowApprovedNumbers()) {
+			valid |= node.getMakStatus().equals("approved");
+		}
+		if (isShowExportedNumbers()) {
+			valid |= node.getMakStatus().equals("exported");
+		}
+		return valid;
+	}
 }

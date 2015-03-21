@@ -162,16 +162,15 @@ public class GraphVisualizer {
 		Map<ActionNumber, List<ActionNumber>> actionNumberGraphs = new HashMap<ActionNumber, List<ActionNumber>>();
 		for (String action : rawData.getAllActionNumbers().keySet()) {
 			ActionNumber baseAction = rawData.getAllActionNumbers().get(action);
-			if (!isValid(baseAction, filter)) {
+			UndirectedGraph<Object, Object> root = dptBuilder.getAllDependencies(action, filter);
+			if (!filter.isValid(baseAction))
 				continue;
-			}
 			
-			UndirectedGraph<Object, Object> root = dptBuilder.getAllDependencies(action);
 			List<ActionNumber> dependentActions = new ArrayList<ActionNumber>();
 			for(Object obj : root.vertexSet()) {
 				if(obj instanceof ActionNumber) {
 					ActionNumber subNumber = (ActionNumber)obj;
-					if (!isValid(subNumber, filter) || subNumber.equals(baseAction))
+					if (subNumber.equals(baseAction))
 						continue;
 					dependentActions.add((ActionNumber)obj);
 				}
@@ -191,22 +190,5 @@ public class GraphVisualizer {
 
 	public List<ActionNumber> getDrawnActionNumers() {
 		return drawnActionNumers;
-	}
-	
-	private boolean isValid(ActionNumber action, MakStatusFilter filter) {
-		boolean valid = false;
-		if (filter.isShowDevelopmentNumbers()) {
-			valid |= action.getMakStatus().equals("development");
-		}
-		if (filter.isShowTestNumbers()) {
-			valid |= action.getMakStatus().equals("test");
-		}
-		if (filter.isShowApprovedNumbers()) {
-			valid |= action.getMakStatus().equals("approved");
-		}
-		if (filter.isShowExportedNumbers()) {
-			valid |= action.getMakStatus().equals("exported");
-		}
-		return valid;
 	}
 }
